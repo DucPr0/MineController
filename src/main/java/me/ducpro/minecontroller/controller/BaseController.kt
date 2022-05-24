@@ -1,19 +1,25 @@
 package me.ducpro.minecontroller.controller
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonSyntaxException
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import me.ducpro.minecontroller.annotations.*
-import me.ducpro.minecontroller.responses.BaseResponse
-import me.ducpro.minecontroller.responses.ObjectResponse
-import me.ducpro.minecontroller.responses.OkObjectResponse
-import me.ducpro.minecontroller.responses.OkResponse
+import me.ducpro.minecontroller.responses.*
 import org.eclipse.jetty.servlet.ServletHandler
 import org.eclipse.jetty.servlet.ServletHolder
+import java.lang.ClassCastException
 import java.lang.IllegalStateException
 import java.lang.reflect.Method
+import kotlin.collections.HashMap
 
 abstract class BaseController {
+    companion object {
+        val gson: Gson = GsonBuilder().create()
+    }
+
     private val baseRoute: String
 
     init {
@@ -49,8 +55,8 @@ abstract class BaseController {
             val servlet = object : HttpServlet() {
                 override fun doGet(req: HttpServletRequest, resp: HttpServletResponse) {
                     requestTypes[HttpGet::class.java]?.let { method ->
-                        val methodResult = method.invoke(this@BaseController) as BaseResponse
-                        handleResponse(resp, methodResult)
+                        var actionResult = invokeAction(req, method)
+                        handleResponse(resp, actionResult)
                     } ?: kotlin.run {
                         super.doGet(req, resp)
                     }
@@ -58,8 +64,8 @@ abstract class BaseController {
 
                 override fun doPost(req: HttpServletRequest, resp: HttpServletResponse) {
                     requestTypes[HttpPost::class.java]?.let { method ->
-                        val methodResult = method.invoke(this@BaseController) as BaseResponse
-                        handleResponse(resp, methodResult)
+                        var actionResult = invokeAction(req, method)
+                        handleResponse(resp, actionResult)
                     } ?: kotlin.run {
                         super.doPost(req, resp)
                     }
@@ -67,8 +73,8 @@ abstract class BaseController {
 
                 override fun doPut(req: HttpServletRequest, resp: HttpServletResponse) {
                     requestTypes[HttpPut::class.java]?.let { method ->
-                        val methodResult = method.invoke(this@BaseController) as BaseResponse
-                        handleResponse(resp, methodResult)
+                        var actionResult = invokeAction(req, method)
+                        handleResponse(resp, actionResult)
                     } ?: kotlin.run {
                         super.doPut(req, resp)
                     }
@@ -76,8 +82,8 @@ abstract class BaseController {
 
                 override fun doDelete(req: HttpServletRequest, resp: HttpServletResponse) {
                     requestTypes[HttpDelete::class.java]?.let { method ->
-                        val methodResult = method.invoke(this@BaseController) as BaseResponse
-                        handleResponse(resp, methodResult)
+                        var actionResult = invokeAction(req, method)
+                        handleResponse(resp, actionResult)
                     } ?: kotlin.run {
                         super.doDelete(req, resp)
                     }
@@ -96,12 +102,44 @@ abstract class BaseController {
         return OkResponse()
     }
 
+    protected fun createBadRequestResponse(): BadRequestResponse {
+        return BadRequestResponse()
+    }
+
+    private fun invokeAction(req: HttpServletRequest, method: Method) : BaseResponse {
+        var result: Any? = null
+
+        if (method.parameters.isEmpty()) {
+            result = method.invoke(this)
+        } else {
+            val requestBody = req.reader
+            val fromBodyType = method.parameters.find { parameter ->
+                parameter.isAnnotationPresent(FromBody::class.java)
+            }?.type ?: throw IllegalStateException("Unable to locate any parameter with annotation @FromBody.")
+
+            val inputObject = try {
+                gson.fromJson(requestBody, fromBodyType)
+            } catch (exception: JsonSyntaxException) {
+                return this.createBadRequestResponse()
+            }
+
+            result = method.invoke(this, inputObject)
+        }
+
+        if (result is BaseResponse) {
+            return result
+        } else {
+            throw ClassCastException("Unsuccessfully attempted to cast ${method.name}'s return value to BaseResponse.")
+        }
+    }
+
     private fun handleResponse(resp: HttpServletResponse, result: BaseResponse) {
         resp.status = result.statusCode
 
         if (result is ObjectResponse) {
             val jsonResponse = result.getJsonResponseObject()
             resp.contentType = "application/json"
+            resp.setContentLength(jsonResponse.toByteArray().size)
             resp.outputStream.write(jsonResponse.toByteArray())
             resp.outputStream.flush()
         }

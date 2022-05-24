@@ -1,5 +1,6 @@
 package me.ducpro.minecontroller.controller
 
+import me.ducpro.minecontroller.annotations.FromBody
 import me.ducpro.minecontroller.annotations.HttpGet
 import me.ducpro.minecontroller.annotations.HttpPost
 import me.ducpro.minecontroller.annotations.RoutePrefix
@@ -10,8 +11,8 @@ import org.bukkit.Bukkit
 @RoutePrefix("/test")
 class TestController : BaseController() {
     @HttpGet("test")
-    fun test(): OkObjectResponse {
-        return this.createOkObjectResponse(listOf(4, 5, 6))
+    fun test(@FromBody a: List<Int>): OkObjectResponse {
+        return this.createOkObjectResponse(5)
     }
 
     @HttpGet("")
@@ -20,8 +21,9 @@ class TestController : BaseController() {
     }
 
     @HttpPost("test")
-    fun test3(): OkResponse {
-        Bukkit.broadcastMessage("testing!")
+    fun test3(@FromBody a: String): OkResponse {
+        Bukkit.broadcastMessage(a)
+//        println(a)
         return this.createOkResponse()
     }
 }
