@@ -17,11 +17,10 @@ abstract class BaseController {
     private val baseRoute: String
 
     init {
-        val annotation = this::class.java.getAnnotation(Route::class.java)
-        this.baseRoute = annotation?.route ?: kotlin.run {
-            throw IllegalStateException("Controller ${this::class.java.name} has no base route")
-        }
-//        TODO: Append '/' if baseRoute doesn't have it at the end.
+        val annotation =
+            this::class.java.getAnnotation(RoutePrefix::class.java)
+            ?: throw IllegalStateException("Controller ${this::class.java.name} has no base route.")
+        this.baseRoute = annotation.route
     }
 
 
@@ -38,7 +37,7 @@ abstract class BaseController {
             ).find { annotation -> method.isAnnotationPresent(annotation) } ?: return
             val annotation = method.getAnnotation(requestType) ?: return
             val childRoute = this.getRoute(annotation) ?: ""
-            val fullRoute = "${this.baseRoute}${childRoute}"
+            val fullRoute = "${this.baseRoute}${if (childRoute.isEmpty()) "" else "/$childRoute"}"
 
             if (!routeMappings.containsKey(fullRoute)) {
                 routeMappings[fullRoute] = HashMap()
