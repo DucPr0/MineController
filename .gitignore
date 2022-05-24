@@ -1,2 +1,4 @@
 /target/*
 /.idea/*
+/MineController.iml
+/deploy.ps1
