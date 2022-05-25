@@ -55,6 +55,12 @@ abstract class BaseController {
             if (childRoute.contains('*')) {
                 throw IllegalStateException("Annotation route for method ${method.name} must not contain wildcard *.")
             }
+            childRoute.split('/').find { route ->
+                ((route.startsWith('{')) && !route.endsWith('}'))
+                        || (!route.startsWith('{') && route.endsWith('}'))
+            }?.let { invalidRoute ->
+                throw IllegalStateException("Annotation route for method ${method.name} contains invalid path $invalidRoute")
+            }
 
             val split = this.splitRoute(childRoute)
 
@@ -75,8 +81,32 @@ abstract class BaseController {
                 }
                 paramRouteMappings[prefix]!![regexSuffix]!![requestType] = method
             }
+
+//            Verify that all parameters contain data sources.
+            method.parameters.forEach { parameter ->
+                arrayOf(
+                    FromBody::class.java,
+                    FromPath::class.java,
+                    FromQuery::class.java
+                ).find { annotation -> parameter.isAnnotationPresent(annotation) }
+                    ?: throw IllegalStateException("Method ${method.name} has parameters with no data source.")
+            }
+
+//            Verify for all @FromPath parameters that the route contains the defined names.
+            method.parameters.forEach { parameter ->
+                if (!parameter.isAnnotationPresent(FromPath::class.java)) return@forEach
+                val parameterPathname = parameter.getAnnotation(FromPath::class.java).name
+
+                val methodRoute = "${this.baseRoute}${if (childRoute.isEmpty()) "" else "/$childRoute"}"
+                val split = methodRoute.split('/')
+                split.withIndex().find { (_, path) ->
+                    if (!path.startsWith('{')) false
+                    else path.substring(1, path.length - 1) == parameterPathname
+                } ?: throw IllegalStateException("Cannot find placeholder {${parameterPathname}} on path ${methodRoute}.")
+            }
         }
 
+//        Map routes
         exactRouteMappings.entries.forEach { (route, requestTypes) ->
             val servlet = object : HttpServlet() {
                 override fun doGet(req: HttpServletRequest, resp: HttpServletResponse) {
@@ -213,14 +243,12 @@ abstract class BaseController {
         val childRoute = this.getRoute(methodAnnotation)
         val methodRoute = "${this.baseRoute}${if (childRoute.isEmpty()) "" else "/$childRoute"}"
 
-//        TODO: Move to extracting all @FromPath arguments at the start and throwing exceptions there.
         method.parameters.forEach { parameter ->
             val dataSource = arrayOf(
                 FromBody::class.java,
                 FromPath::class.java,
                 FromQuery::class.java
-            ).find { annotation -> parameter.isAnnotationPresent(annotation) }
-                ?: throw IllegalStateException("Method ${method.name} has parameters with no data source.")
+            ).find { annotation -> parameter.isAnnotationPresent(annotation) }!!
             when (val annotation = parameter.getAnnotation(dataSource)) {
                 is FromBody -> {
                     val requestBody = req.reader
@@ -243,8 +271,7 @@ abstract class BaseController {
                     val data = split.zip(querySplit).find { (path, _) ->
                         if (!path.startsWith('{')) false
                         else path.substring(1, path.length - 1) == annotation.name
-                    }?.second
-                        ?: throw IllegalStateException("Cannot find placeholder {${annotation.name}} on path.")
+                    }!!.second
 
                     val dataType = parameter.type
                     val pathParameter = try {

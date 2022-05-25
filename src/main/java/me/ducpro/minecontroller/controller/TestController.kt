@@ -7,8 +7,8 @@ import org.bukkit.Bukkit
 
 @RoutePrefix("/test")
 class TestController : BaseController() {
-    @HttpGet("test/{id}/a/{id}")
-    fun test(@FromPath("id") a: Int, @FromPath("id") b: Double): OkObjectResponse {
+    @HttpGet("test/{id}/a/{id2}")
+    fun test(@FromPath("id") a: Int, @FromPath("id2") b: Double): OkObjectResponse {
         println(a)
         println(b)
         return this.createOkObjectResponse(5)
