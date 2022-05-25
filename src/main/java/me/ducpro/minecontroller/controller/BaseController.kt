@@ -59,7 +59,7 @@ abstract class BaseController {
                 ((route.startsWith('{')) && !route.endsWith('}'))
                         || (!route.startsWith('{') && route.endsWith('}'))
             }?.let { invalidRoute ->
-                throw IllegalStateException("Annotation route for method ${method.name} contains invalid path $invalidRoute")
+                throw IllegalStateException("Annotation route for method ${method.name} contains invalid path $invalidRoute.")
             }
 
             val split = this.splitRoute(childRoute)
@@ -94,12 +94,13 @@ abstract class BaseController {
 
 //            Verify for all @FromPath parameters that the route contains the defined names.
             method.parameters.forEach { parameter ->
-                if (!parameter.isAnnotationPresent(FromPath::class.java)) return@forEach
+                if (!parameter.isAnnotationPresent(FromPath::class.java)) {
+                    return@forEach
+                }
                 val parameterPathname = parameter.getAnnotation(FromPath::class.java).name
 
                 val methodRoute = "${this.baseRoute}${if (childRoute.isEmpty()) "" else "/$childRoute"}"
-                val split = methodRoute.split('/')
-                split.withIndex().find { (_, path) ->
+                methodRoute.split('/').find { path ->
                     if (!path.startsWith('{')) false
                     else path.substring(1, path.length - 1) == parameterPathname
                 } ?: throw IllegalStateException("Cannot find placeholder {${parameterPathname}} on path ${methodRoute}.")
@@ -152,6 +153,7 @@ abstract class BaseController {
         paramRouteMappings.entries.forEach { (route, paths) ->
             val servlet = object : HttpServlet() {
                 override fun doGet(req: HttpServletRequest, resp: HttpServletResponse) {
+//                    TODO: Regex is overkill. Use a more efficient O(N) match.
                     val matchingController = paths.keys.find { regex -> matchesPathInfo(regex, req.pathInfo) }
                         ?: return handleResponse(resp, createNoMatchingControllerResponse(req.requestURI))
 
