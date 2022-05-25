@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import me.ducpro.minecontroller.annotations.*
+import me.ducpro.minecontroller.exceptions.InvalidParameterException
+import me.ducpro.minecontroller.exceptions.InvalidRouteException
 import me.ducpro.minecontroller.responses.*
 import org.eclipse.jetty.servlet.ServletHandler
 import org.eclipse.jetty.servlet.ServletHolder
@@ -29,7 +31,7 @@ abstract class BaseController {
     init {
         val annotation =
             this::class.java.getAnnotation(RoutePrefix::class.java)
-            ?: throw IllegalStateException("Controller ${this::class.java.name} has no base route.")
+            ?: throw InvalidRouteException("Controller ${this::class.java.name} has no base route.")
         this.baseRoute = annotation.route
     }
 
@@ -53,13 +55,13 @@ abstract class BaseController {
             val annotation = method.getAnnotation(requestType)
             val childRoute = this.getRoute(annotation)
             if (childRoute.contains('*')) {
-                throw IllegalStateException("Annotation route for method ${method.name} must not contain wildcard *.")
+                throw InvalidRouteException("Annotation route for method ${method.name} must not contain wildcard *.")
             }
             childRoute.split('/').find { route ->
                 ((route.startsWith('{')) && !route.endsWith('}'))
                         || (!route.startsWith('{') && route.endsWith('}'))
             }?.let { invalidRoute ->
-                throw IllegalStateException("Annotation route for method ${method.name} contains invalid path $invalidRoute.")
+                throw InvalidRouteException("Annotation route for method ${method.name} contains invalid path $invalidRoute.")
             }
 
             val split = this.splitRoute(childRoute)
@@ -89,7 +91,7 @@ abstract class BaseController {
                     FromPath::class.java,
                     FromQuery::class.java
                 ).find { annotation -> parameter.isAnnotationPresent(annotation) }
-                    ?: throw IllegalStateException("Method ${method.name} has parameters with no data source.")
+                    ?: throw InvalidParameterException("Method ${method.name} has parameters with no data source.")
             }
 
 //            Verify for all @FromPath parameters that the route contains the defined names.
@@ -103,7 +105,7 @@ abstract class BaseController {
                 methodRoute.split('/').find { path ->
                     if (!path.startsWith('{')) false
                     else path.substring(1, path.length - 1) == parameterPathname
-                } ?: throw IllegalStateException("Cannot find placeholder {${parameterPathname}} on path ${methodRoute}.")
+                } ?: throw InvalidParameterException("Cannot find placeholder $parameterPathname in path $methodRoute.")
             }
         }
 
