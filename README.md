@@ -1,5 +1,5 @@
 # MineController
-A REST API framework for Java designed to match ASP.NET's syntax.
+A lightweight REST API framework for Java designed to match ASP.NET's syntax.
 
 # What is MineController?
 MineController is an attempt at bringing REST Controllers' syntax from ASP.NET over to Java and Kotlin. Simply define your controller functions with the appropriate http requests and routing, and the framework will take care of the rest.
@@ -34,4 +34,4 @@ server.start();
 The "name" for annotations might be clunky, but it is currently impossible to determine parameter names in Java at runtime without the -parameters compile flag, which this framework has no control over.
 
 # Why is it named MINEController?
-The need of a convenient REST API framework came to me when I was developing some Minecraft REST API endpoints, and wanted a more convenient way to create the endpoints instead of handling http requests by myself.
+The need of a convenient REST API framework came to me when I was developing some Minecraft REST API endpoints, and wanted a more convenient way to create the endpoints instead of handling http requests by myself, but not to use something as heavy as Spring.
