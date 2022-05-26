@@ -6,9 +6,6 @@ MineController is an attempt at bringing REST Controllers' syntax from ASP.NET o
 
 Currently, MineController uses Jetty for the http server. Future plans may include moving to more lightweight web servers.
 
-# Why is it named MINEController?
-The need of a convenient REST API framework came to me when I was developing some Minecraft REST API endpoints, and wanted a more convenient way to create the endpoints instead of handling http requests by myself.
-
 # How do I use this?
 To start making controllers, simply define a class that inherits from BaseController:
 ```
@@ -35,3 +32,6 @@ server.start();
 **Notes**:
 
 The "name" for annotations might be clunky, but it is currently impossible to determine parameter names in Java at runtime without the -parameters compile flag, which this framework has no control over.
+
+# Why is it named MINEController?
+The need of a convenient REST API framework came to me when I was developing some Minecraft REST API endpoints, and wanted a more convenient way to create the endpoints instead of handling http requests by myself.
