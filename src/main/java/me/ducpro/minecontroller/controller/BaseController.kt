@@ -32,6 +32,12 @@ abstract class BaseController {
         val annotation =
             this::class.java.getAnnotation(RoutePrefix::class.java)
             ?: throw InvalidRouteException("Controller ${this::class.java.name} has no base route.")
+        if (!annotation.route.startsWith('/')) {
+            throw InvalidRouteException("Base route of ${this::class.java.name} must start with '/'.")
+        }
+        if (annotation.route.endsWith('/')) {
+            throw InvalidRouteException("Base route of ${this::class.java.name} mustn't end with '/'.")
+        }
         this.baseRoute = annotation.route
     }
 
@@ -56,6 +62,12 @@ abstract class BaseController {
             val childRoute = this.getRoute(annotation)
             if (childRoute.contains('*')) {
                 throw InvalidRouteException("Annotation route for method ${method.name} must not contain wildcard *.")
+            }
+            if (childRoute.startsWith('/')) {
+                throw InvalidRouteException("Annotation route for method ${method.name} must not start with '/'.")
+            }
+            if (childRoute.endsWith('/')) {
+                throw InvalidRouteException("Annotation route for method ${method.name} must not end with '/'.")
             }
             childRoute.split('/').find { route ->
                 ((route.startsWith('{')) && !route.endsWith('}'))
