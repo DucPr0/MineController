@@ -244,6 +244,10 @@ abstract class BaseController {
         return NotFoundObjectResponse(obj)
     }
 
+    protected fun createNoContentResponse(): NoContentResponse {
+        return NoContentResponse()
+    }
+
     private fun invokeAction(req: HttpServletRequest, method: Method) : BaseResponse {
         val result: Any?
         val invokeParameters = mutableListOf<Any>()
