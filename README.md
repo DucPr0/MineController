@@ -17,9 +17,9 @@ public class SumController extends BaseController {
     }
 }
 ```
-Now, a query to the endpoint /sum/3/calculate?a=5 will return the sum 3 + 5 = 8. @FromBody is also supported, although at most one can be present. Checks haven't yet been implemented against this.
+Now, a query to the endpoint /sum/3/calculate?a=5 will return the sum 3 + 5 = 8. @FromBody is also supported, although at most one can be present.
 
-**Important**: The route prefix must be prefixed with "/", and methods' route must not contain "/" at the start. Both types of routes also mustn't have "/" at the end. Checks will be implemented in the future to prevent against these cases.
+**Important**: The route prefix must be prefixed with "/", and methods' route must not contain "/" at the start. Both types of routes also mustn't have "/" at the end.
 
 Now, to create a server:
 ```
