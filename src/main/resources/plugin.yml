@@ -1,5 +1,5 @@
 main: me.ducpro.minecontroller.MineController
 name: MineController
 author: DucPro
-api-version: 1.18
+api-version: 1.16
 version: 1.0

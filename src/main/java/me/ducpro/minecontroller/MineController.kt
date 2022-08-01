@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin
 class MineController : JavaPlugin() {
     override fun onEnable() {
         val server = HttpServer(8080)
-        server.mapControllers(listOf(TestController()))
+        server.mapControllers(TestController())
         server.start()
     }
 

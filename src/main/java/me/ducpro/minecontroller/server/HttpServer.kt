@@ -2,21 +2,17 @@ package me.ducpro.minecontroller.server
 
 import me.ducpro.minecontroller.controller.BaseController
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.ServletHandler
 
 class HttpServer(private val port: Int) {
-    private val server = Server()
-    private val handler = ServletHandler()
+    private val server = Server(this.port)
+    val handler = ServletHandler()
 
     init {
         this.server.handler = handler
-        val connector = ServerConnector(server)
-        connector.port = this.port
-        this.server.connectors = arrayOf(connector)
     }
 
-    fun mapControllers(controllers: List<BaseController>) {
+    fun mapControllers(vararg controllers: BaseController) {
         controllers.forEach { controller -> controller.map(this.handler) }
     }
 
@@ -25,4 +21,7 @@ class HttpServer(private val port: Int) {
     }
 
 //    TODO: Add logic for stopping the server
+    fun stop() {
+        this.server.stop()
+    }
 }
