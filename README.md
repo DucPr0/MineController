@@ -34,4 +34,4 @@ server.start();
 The "name" for annotations might be clunky, but it is currently impossible to determine parameter names in Java at runtime without the -parameters compile flag, which this framework has no control over.
 
 # Why is it named MINEController?
-The need of a convenient REST API framework came to me when I was developing some Minecraft REST API endpoints, and wanted a more convenient way to create the endpoints instead of handling http requests by myself, but not to use something as heavy as Spring.
+Plans are to integrate this REST framework with the Spigot API in the future.
